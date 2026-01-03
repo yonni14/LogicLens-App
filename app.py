@@ -209,22 +209,9 @@ def safe_parse(expression):
         return None, "empty"
     try:
         parser = LogicParser(expression)
-        tokens = parser.tokenize()
-
-        # DEBUG - הצגת הטוקנים
-        st.write(f"🔍 טוקנים: {tokens}")
-
-        parser.pos = 0  # אתחול מחדש
         expr = parser.parse()
-
-        # DEBUG - הצגת הביטוי המפורסר
-        st.write(f"🔍 ביטוי מפורסר: {expr}")
-
         return expr, None
     except Exception as e:
-        st.error(f"🔍 שגיאת פרסור: {str(e)}")
-        import traceback
-        st.code(traceback.format_exc())
         return None, str(e)
 
 
@@ -377,20 +364,16 @@ if expression_input:
                     df = pd.DataFrame(rows)
 
 
-                    # צביעת עמודות - משתנים בלבד בלי צבע, שאר העמודות עם צבע
+                    # צביעת כל העמודות - כולל משתנים
                     def color_row(row):
                         styles = []
                         for col in df.columns:
                             val = row[col]
-                            # אם העמודה היא משתנה (אות בודדת), אל תצבע
-                            if col in [str(a) for a in atoms]:
-                                styles.append('')
+                            # צבע לפי ערך אמת - לכל העמודות
+                            if val:
+                                styles.append('background-color: #d1e7dd')
                             else:
-                                # צבע לפי ערך אמת
-                                if val:
-                                    styles.append('background-color: #d1e7dd')
-                                else:
-                                    styles.append('background-color: #f8d7da')
+                                styles.append('background-color: #f8d7da')
                         return styles
 
 
@@ -433,27 +416,44 @@ if expression_input:
 
 
                         def paint_venn(v, area_code, vars_list, current_expr):
+                            # בדיקה אם האזור קיים (מונע קריסה)
                             if v.get_patch_by_id(area_code):
                                 values = [bool(int(x)) for x in area_code]
                                 mapping = {vars_list[i]: values[i] for i in range(len(vars_list))}
                                 try:
                                     res_obj = current_expr.subs(mapping)
+                                    patch = v.get_patch_by_id(area_code)
+
                                     if check_truth(res_obj):
-                                        v.get_patch_by_id(area_code).set_color('#198754')
-                                        v.get_patch_by_id(area_code).set_alpha(0.7)
+                                        patch.set_color('#198754')  # ירוק
+                                        patch.set_alpha(0.7)
                                     else:
-                                        v.get_patch_by_id(area_code).set_color('#e9ecef')
-                                        v.get_patch_by_id(area_code).set_alpha(0.3)
+                                        patch.set_color('#e9ecef')  # אפור בהיר
+                                        patch.set_alpha(0.3)
                                 except:
                                     pass
 
 
+                        # ייבוא פונקציות המעגלים (הגבולות השחורים)
+                        from matplotlib_venn import venn2_circles, venn3_circles
+
                         if len(atoms) == 2:
+                            # 1. ציור הצבעים
                             v = venn2(subsets=(1, 1, 1), set_labels=[str(a) for a in atoms], ax=ax)
+                            # 2. ציור קווי מתאר שחורים (כדי שיראו גם עיגולים ריקים)
+                            venn2_circles(subsets=(1, 1, 1), ax=ax, linewidth=1, color="black")
+
+                            # 3. צביעה לפי אמת/שקר
                             for area in ['10', '01', '11']:
                                 paint_venn(v, area, atoms, target)
+
                         elif len(atoms) == 3:
+                            # 1. ציור הצבעים
                             v = venn3(subsets=(1,) * 7, set_labels=[str(a) for a in atoms], ax=ax)
+                            # 2. ציור קווי מתאר שחורים
+                            venn3_circles(subsets=(1,) * 7, ax=ax, linewidth=1, color="black")
+
+                            # 3. צביעה לפי אמת/שקר
                             for area in ['100', '010', '001', '110', '101', '011', '111']:
                                 paint_venn(v, area, atoms, target)
 
