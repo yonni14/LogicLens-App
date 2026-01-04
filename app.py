@@ -32,7 +32,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📘 LogicLens: מעבדה לוגית")
+st.title("📘 LogicLens")
 
 # --- ניהול קלט ---
 if 'txt_input' not in st.session_state:
@@ -293,7 +293,7 @@ expression_input = st.text_input(
     placeholder="לדוגמה: (p v q) -> r"
 )
 
-st.caption("💡 טיפ: אפשר לכתוב 'pvq' במקום '(p∨q)' - הפרסר יבין!")
+st.caption("חשוב: בשל מגבלות הפלטפורמה לא ניתן לערוך נוסחאות אחרי הכתיבה, ויש לכתוב אותן מחדש")
 
 c1, c2, c3, c4, c5, c6 = st.columns(6)
 with c1: st.button("∨", on_click=add_char, args=("∨",))
@@ -462,3 +462,4 @@ if expression_input:
 
         except Exception as e:
             st.error(f"שגיאה: {e}")
+
